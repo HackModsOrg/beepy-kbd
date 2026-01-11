@@ -165,14 +165,148 @@ static ssize_t __used led_blue_store(struct kobject *kobj, struct kobj_attribute
 }
 struct kobj_attribute led_blue_attr = __ATTR(led_blue, 0220, NULL, led_blue_store);
 
-// Keyboard backlight value
+// Keyboard backlight get
+static ssize_t keyboard_backlight_show(struct kobject *kobj, struct kobj_attribute *attr,
+	char *buf)
+{
+	int rc;
+	uint8_t state;
+
+	// Make sure I2C client was initialized
+	if ((g_ctx == NULL) || (g_ctx->i2c_client == NULL)) {
+		return -EINVAL;
+	}
+
+	// Read BKL register value
+	if ((rc = kbd_read_i2c_u8(g_ctx->i2c_client, REG_BKL, &state)) < 0) {
+		return rc;
+	}
+	return sprintf(buf, "%d\n", state);
+}
+// Keyboard backlight set
 static ssize_t __used keyboard_backlight_store(struct kobject *kobj,
 	struct kobj_attribute *attr, char const *buf, size_t count)
 {
 	return parse_and_write_i2c_u8(buf, count, REG_BKL);
 }
 struct kobj_attribute keyboard_backlight_attr
-	= __ATTR(keyboard_backlight, 0220, NULL, keyboard_backlight_store);
+	= __ATTR(keyboard_backlight, 0660, keyboard_backlight_show, keyboard_backlight_store);
+
+// USB mouse get
+static ssize_t usb_mouse_show(struct kobject *kobj, struct kobj_attribute *attr,
+	char *buf)
+{
+	int rc;
+	uint8_t state;
+
+	// Make sure I2C client was initialized
+	if ((g_ctx == NULL) || (g_ctx->i2c_client == NULL)) {
+		return -EINVAL;
+	}
+
+	// Read PWR register value
+	if ((rc = kbd_read_i2c_u8(g_ctx->i2c_client, REG_CF2, &state)) < 0) {
+		return rc;
+	}
+    state &= REG_CF2_USB_MOUSE_ON;
+    state = state >> 2;
+	return sprintf(buf, "%d\n", state);
+}
+// USB mouse set
+static ssize_t __used usb_mouse_store(struct kobject *kobj,
+	struct kobj_attribute *attr, char const *buf, size_t count)
+{
+	int rc;
+	uint8_t reg_value;
+	uint8_t user_input;
+
+	// Parse string entry
+	if ((user_input = parse_u8(buf)) < 0) {
+		return -EINVAL;
+	}
+    if (user_input > 1) { // only 0 and 1 accepted
+		return -EINVAL;
+	}
+	// Make sure I2C client was initialized
+	if ((g_ctx == NULL) || (g_ctx->i2c_client == NULL)) {
+		return -EINVAL;
+	}
+
+	// Read PWR register value
+	if ((rc = kbd_read_i2c_u8(g_ctx->i2c_client, REG_CF2, &reg_value)) < 0) {
+		return rc;
+	}
+    if (user_input) {
+        reg_value |= REG_CF2_USB_MOUSE_ON;
+    } else {
+        reg_value &= ~REG_CF2_USB_MOUSE_ON;
+    }
+    if (g_ctx && g_ctx->i2c_client) {
+        kbd_write_i2c_u8(g_ctx->i2c_client, REG_CF2, (uint8_t)reg_value);
+    }
+    return count;
+}
+struct kobj_attribute usb_mouse_attr
+	= __ATTR(usb_mouse, 0660, usb_mouse_show, usb_mouse_store);
+
+
+// USB keyboard get
+static ssize_t usb_keyboard_show(struct kobject *kobj, struct kobj_attribute *attr,
+	char *buf)
+{
+	int rc;
+	uint8_t state;
+
+	// Make sure I2C client was initialized
+	if ((g_ctx == NULL) || (g_ctx->i2c_client == NULL)) {
+		return -EINVAL;
+	}
+
+	// Read PWR register value
+	if ((rc = kbd_read_i2c_u8(g_ctx->i2c_client, REG_CF2, &state)) < 0) {
+		return rc;
+	}
+    state &= REG_CF2_USB_KEYB_ON;
+    state = state >> 1;
+	return sprintf(buf, "%d\n", state);
+}
+// USB keyboard set
+static ssize_t __used usb_keyboard_store(struct kobject *kobj,
+	struct kobj_attribute *attr, char const *buf, size_t count)
+{
+	int rc;
+	uint8_t reg_value;
+	uint8_t user_input;
+
+	// Parse string entry
+	if ((user_input = parse_u8(buf)) < 0) {
+		return -EINVAL;
+	}
+    if (user_input > 1) { // only 0 and 1 accepted
+		return -EINVAL;
+	}
+	// Make sure I2C client was initialized
+	if ((g_ctx == NULL) || (g_ctx->i2c_client == NULL)) {
+		return -EINVAL;
+	}
+
+	// Read PWR register value
+	if ((rc = kbd_read_i2c_u8(g_ctx->i2c_client, REG_CF2, &reg_value)) < 0) {
+		return rc;
+	}
+    if (user_input) {
+        reg_value |= REG_CF2_USB_KEYB_ON;
+    } else {
+        reg_value &= ~REG_CF2_USB_KEYB_ON;
+    }
+    if (g_ctx && g_ctx->i2c_client) {
+        kbd_write_i2c_u8(g_ctx->i2c_client, REG_CF2, (uint8_t)reg_value);
+    }
+    return count;
+}
+struct kobj_attribute usb_keyboard_attr
+	= __ATTR(usb_keyboard, 0660, usb_keyboard_show, usb_keyboard_store);
+
 
 // Shutdown and rewake timer in minutes
 static ssize_t __used rewake_timer_store(struct kobject *kobj,
@@ -348,6 +482,8 @@ static struct attribute *beepy_attrs[] = {
 	&led_green_attr.attr,
 	&led_blue_attr.attr,
 	&keyboard_backlight_attr.attr,
+	&usb_mouse_attr.attr,
+	&usb_keyboard_attr.attr,
 	&rewake_timer_attr.attr,
 	&startup_reason_attr.attr,
 	&fw_version_attr.attr,

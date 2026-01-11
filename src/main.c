@@ -104,6 +104,8 @@ static int __init beepy_kbd_init(void)
 		return rc;
 	}
 	pr_info("%s Initalised beepy-kbd.\n", __func__);
+    // debug print to verify that the new version of the driver is indeed running
+	pr_info("%s meow mrow mrow hiss hiss!\n", __func__);
 
 	return rc;
 }

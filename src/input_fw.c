@@ -100,6 +100,9 @@ void input_fw_shutdown(struct i2c_client* i2c_client, struct kbd_ctx *ctx)
 	// Turn off backlight
 	(void)kbd_write_i2c_u8(i2c_client, REG_BKL, 0);
 
+	// Turn off vibromotor
+	(void)kbd_write_i2c_u8(i2c_client, REG_VBR, 0);
+
 	// Reenable touch events
 	(void)kbd_write_i2c_u8(i2c_client, REG_CF2, REG_CFG2_DEFAULT_SETTING);
 

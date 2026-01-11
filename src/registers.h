@@ -151,6 +151,14 @@
 #define TOUCHPAD_LED_HIGH 0x3
 #define TOUCHPAD_LED_LOW 0x5
 
+#define REG_VBR          0x50
+#define REG_MUX         0x51
+#define REG_MUX_USB 		BIT(0)
+#define REG_MUX_FUSB 		BIT(1)
+#define REG_PWR          0x52
+#define REG_PWR_CHG_PWR			BIT(1)
+#define REG_PWR_CHG_DIS 		BIT(0)
+
 #define REG_TOUCHPAD_REG_ENGINE 0x60
 #define REG_TOUCHPAD_ENGINE_XY_SCALE (1 << 1)
 #define REG_TOUCHPAD_REG_SPEED 0x63

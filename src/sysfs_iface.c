@@ -192,6 +192,33 @@ static ssize_t __used keyboard_backlight_store(struct kobject *kobj,
 struct kobj_attribute keyboard_backlight_attr
 	= __ATTR(keyboard_backlight, 0660, keyboard_backlight_show, keyboard_backlight_store);
 
+// Vibromotor get
+static ssize_t vibromotor_show(struct kobject *kobj, struct kobj_attribute *attr,
+	char *buf)
+{
+	int rc;
+	uint8_t state;
+
+	// Make sure I2C client was initialized
+	if ((g_ctx == NULL) || (g_ctx->i2c_client == NULL)) {
+		return -EINVAL;
+	}
+
+	// Read VBR register value
+	if ((rc = kbd_read_i2c_u8(g_ctx->i2c_client, REG_VBR, &state)) < 0) {
+		return rc;
+	}
+	return sprintf(buf, "%d\n", state);
+}
+// Vibromotor set
+static ssize_t __used vibromotor_store(struct kobject *kobj,
+	struct kobj_attribute *attr, char const *buf, size_t count)
+{
+	return parse_and_write_i2c_u8(buf, count, REG_VBR);
+}
+struct kobj_attribute vibromotor_attr
+	= __ATTR(vibromotor, 0660, vibromotor_show, vibromotor_store);
+
 // USB mouse get
 static ssize_t usb_mouse_show(struct kobject *kobj, struct kobj_attribute *attr,
 	char *buf)
@@ -307,6 +334,237 @@ static ssize_t __used usb_keyboard_store(struct kobject *kobj,
 struct kobj_attribute usb_keyboard_attr
 	= __ATTR(usb_keyboard, 0660, usb_keyboard_show, usb_keyboard_store);
 
+
+// Charger enabled get
+static ssize_t charger_enabled_show(struct kobject *kobj, struct kobj_attribute *attr,
+	char *buf)
+{
+	int rc;
+	uint8_t state;
+
+	// Make sure I2C client was initialized
+	if ((g_ctx == NULL) || (g_ctx->i2c_client == NULL)) {
+		return -EINVAL;
+	}
+
+	// Read PWR register value
+	if ((rc = kbd_read_i2c_u8(g_ctx->i2c_client, REG_PWR, &state)) < 0) {
+		return rc;
+	}
+    state &= REG_PWR_CHG_DIS;
+    state = !state;
+	return sprintf(buf, "%d\n", state);
+}
+// Charger enabled set
+static ssize_t __used charger_enabled_store(struct kobject *kobj,
+	struct kobj_attribute *attr, char const *buf, size_t count)
+{
+	int rc;
+	uint8_t reg_value;
+	uint8_t user_input;
+
+	// Parse string entry
+	if ((user_input = parse_u8(buf)) < 0) {
+		return -EINVAL;
+	}
+    if (user_input > 1) { // only 0 and 1 accepted
+		return -EINVAL;
+	}
+	// Make sure I2C client was initialized
+	if ((g_ctx == NULL) || (g_ctx->i2c_client == NULL)) {
+		return -EINVAL;
+	}
+
+	// Read PWR register value
+	if ((rc = kbd_read_i2c_u8(g_ctx->i2c_client, REG_PWR, &reg_value)) < 0) {
+		return rc;
+	}
+    if (user_input) { // inverted - setting 1 means the bit has to be cleared
+        reg_value &= ~REG_PWR_CHG_DIS;
+    } else {
+        reg_value |= REG_PWR_CHG_DIS;
+    }
+    if (g_ctx && g_ctx->i2c_client) {
+        kbd_write_i2c_u8(g_ctx->i2c_client, REG_PWR, (uint8_t)reg_value);
+    }
+    return count;
+}
+struct kobj_attribute charger_enabled_attr
+	= __ATTR(charger_enabled, 0660, charger_enabled_show, charger_enabled_store);
+
+// Charger power get
+static ssize_t charger_power_show(struct kobject *kobj, struct kobj_attribute *attr,
+	char *buf)
+{
+	int rc;
+	uint8_t state;
+
+	// Make sure I2C client was initialized
+	if ((g_ctx == NULL) || (g_ctx->i2c_client == NULL)) {
+		return -EINVAL;
+	}
+
+	// Read PWR register value
+	if ((rc = kbd_read_i2c_u8(g_ctx->i2c_client, REG_PWR, &state)) < 0) {
+		return rc;
+	}
+    state &= REG_PWR_CHG_PWR;
+    state = state >> 1;
+	return sprintf(buf, "%d\n", state);
+}
+// Charger power set
+static ssize_t __used charger_power_store(struct kobject *kobj,
+	struct kobj_attribute *attr, char const *buf, size_t count)
+{
+	int rc;
+	uint8_t reg_value;
+	uint8_t user_input;
+
+	// Parse string entry
+	if ((user_input = parse_u8(buf)) < 0) {
+		return -EINVAL;
+	}
+    if (user_input > 1) { // only 0 and 1 accepted
+		return -EINVAL;
+	}
+	// Make sure I2C client was initialized
+	if ((g_ctx == NULL) || (g_ctx->i2c_client == NULL)) {
+		return -EINVAL;
+	}
+
+	// Read PWR register value
+	if ((rc = kbd_read_i2c_u8(g_ctx->i2c_client, REG_PWR, &reg_value)) < 0) {
+		return rc;
+	}
+    //reg_value = reg_value & REG_PWR_CHG_PWR;
+    if (user_input) {
+        reg_value |= REG_PWR_CHG_PWR;
+    } else {
+        reg_value &= ~REG_PWR_CHG_PWR;
+    }
+    if (g_ctx && g_ctx->i2c_client) {
+        kbd_write_i2c_u8(g_ctx->i2c_client, REG_PWR, (uint8_t)reg_value);
+    }
+    return count;
+}
+
+struct kobj_attribute charger_power_attr
+	= __ATTR(charger_power, 0660, charger_power_show, charger_power_store);
+
+// USB mux get
+static ssize_t mux_usb_show(struct kobject *kobj, struct kobj_attribute *attr,
+	char *buf)
+{
+	int rc;
+	uint8_t state;
+
+	// Make sure I2C client was initialized
+	if ((g_ctx == NULL) || (g_ctx->i2c_client == NULL)) {
+		return -EINVAL;
+	}
+
+	// Read PWR register value
+	if ((rc = kbd_read_i2c_u8(g_ctx->i2c_client, REG_MUX, &state)) < 0) {
+		return rc;
+	}
+    state &= REG_MUX_USB;
+	return sprintf(buf, "%d\n", state);
+}
+// USB mux set
+static ssize_t __used mux_usb_store(struct kobject *kobj,
+	struct kobj_attribute *attr, char const *buf, size_t count)
+{
+	int rc;
+	uint8_t reg_value;
+	uint8_t user_input;
+
+	// Parse string entry
+	if ((user_input = parse_u8(buf)) < 0) {
+		return -EINVAL;
+	}
+    if (user_input > 1) { // only 0 and 1 accepted
+		return -EINVAL;
+	}
+	// Make sure I2C client was initialized
+	if ((g_ctx == NULL) || (g_ctx->i2c_client == NULL)) {
+		return -EINVAL;
+	}
+
+	// Read MUX register value
+	if ((rc = kbd_read_i2c_u8(g_ctx->i2c_client, REG_MUX, &reg_value)) < 0) {
+		return rc;
+	}
+    //reg_value = reg_value & REG_MUX_USB;
+    if (user_input) {
+        reg_value |= REG_MUX_USB;
+    } else {
+        reg_value &= ~REG_MUX_USB;
+    }
+    if (g_ctx && g_ctx->i2c_client) {
+        kbd_write_i2c_u8(g_ctx->i2c_client, REG_MUX, (uint8_t)reg_value);
+    }
+    return count;
+}
+struct kobj_attribute mux_usb_attr
+	= __ATTR(mux_usb, 0660, mux_usb_show, mux_usb_store);
+
+// FUSB mux get
+static ssize_t mux_fusb_show(struct kobject *kobj, struct kobj_attribute *attr,
+	char *buf)
+{
+	int rc;
+	uint8_t state;
+
+	// Make sure I2C client was initialized
+	if ((g_ctx == NULL) || (g_ctx->i2c_client == NULL)) {
+		return -EINVAL;
+	}
+
+	// Read PWR register value
+	if ((rc = kbd_read_i2c_u8(g_ctx->i2c_client, REG_MUX, &state)) < 0) {
+		return rc;
+	}
+    state &= REG_MUX_FUSB;
+    state = state >> 1;
+	return sprintf(buf, "%d\n", state);
+}
+// USB mux set
+static ssize_t __used mux_fusb_store(struct kobject *kobj,
+	struct kobj_attribute *attr, char const *buf, size_t count)
+{
+	int rc;
+	uint8_t reg_value;
+	uint8_t user_input;
+
+	// Parse string entry
+	if ((user_input = parse_u8(buf)) < 0) {
+		return -EINVAL;
+	}
+    if (user_input > 1) { // only 0 and 1 accepted
+		return -EINVAL;
+	}
+	// Make sure I2C client was initialized
+	if ((g_ctx == NULL) || (g_ctx->i2c_client == NULL)) {
+		return -EINVAL;
+	}
+
+	// Read MUX register value
+	if ((rc = kbd_read_i2c_u8(g_ctx->i2c_client, REG_MUX, &reg_value)) < 0) {
+		return rc;
+	}
+    //reg_value = reg_value & REG_MUX_FUSB;
+    if (user_input) {
+        reg_value |= REG_MUX_FUSB;
+    } else {
+        reg_value &= ~REG_MUX_FUSB;
+    }
+    if (g_ctx && g_ctx->i2c_client) {
+        kbd_write_i2c_u8(g_ctx->i2c_client, REG_MUX, (uint8_t)reg_value);
+    }
+    return count;
+}
+struct kobj_attribute mux_fusb_attr
+	= __ATTR(mux_fusb, 0660, mux_fusb_show, mux_fusb_store);
 
 // Shutdown and rewake timer in minutes
 static ssize_t __used rewake_timer_store(struct kobject *kobj,
@@ -482,6 +740,11 @@ static struct attribute *beepy_attrs[] = {
 	&led_green_attr.attr,
 	&led_blue_attr.attr,
 	&keyboard_backlight_attr.attr,
+	&vibromotor_attr.attr,
+	&charger_enabled_attr.attr,
+	&charger_power_attr.attr,
+	&mux_usb_attr.attr,
+	&mux_fusb_attr.attr,
 	&usb_mouse_attr.attr,
 	&usb_keyboard_attr.attr,
 	&rewake_timer_attr.attr,

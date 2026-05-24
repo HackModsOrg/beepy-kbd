@@ -42,6 +42,7 @@ static const uint8_t keycodes[NUM_KEYCODES] = {
 	[29] = KEY_Z,
 	[30] = KEY_1,
 	[31] = KEY_2,
+	[32] = KEY_3,
 	[33] = KEY_4,
 	[34] = KEY_5,
 	[35] = KEY_6,

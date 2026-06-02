@@ -20,7 +20,12 @@ ifeq ($(BUILD_DIR),)
 BUILD_DIR := .
 endif
 
+ifeq ($(BOARD),BLEPIS_V2)
+# Blepis v2 requires irq pin 5 instead of 4
+BOOT_CONFIG_LINE := dtoverlay=beepy-kbd,irq_pin=5
+else
 BOOT_CONFIG_LINE := dtoverlay=beepy-kbd,irq_pin=4
+endif
 KMAP_LINE := KMAP=/usr/share/kbd/keymaps/beepy-kbd.map
 
 # Raspbian 12 moved config and cmdline to firmware

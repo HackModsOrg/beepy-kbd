@@ -192,6 +192,33 @@ static ssize_t __used keyboard_backlight_store(struct kobject *kobj,
 struct kobj_attribute keyboard_backlight_attr
 	= __ATTR(keyboard_backlight, 0660, keyboard_backlight_show, keyboard_backlight_store);
 
+// LCD backlight get
+static ssize_t lcd_backlight_show(struct kobject *kobj, struct kobj_attribute *attr,
+	char *buf)
+{
+	int rc;
+	uint8_t state;
+
+	// Make sure I2C client was initialized
+	if ((g_ctx == NULL) || (g_ctx->i2c_client == NULL)) {
+		return -EINVAL;
+	}
+
+	// Read BKL register value
+	if ((rc = kbd_read_i2c_u8(g_ctx->i2c_client, REG_BK2, &state)) < 0) {
+		return rc;
+	}
+	return sprintf(buf, "%d\n", state);
+}
+// LCD backlight set
+static ssize_t __used lcd_backlight_store(struct kobject *kobj,
+	struct kobj_attribute *attr, char const *buf, size_t count)
+{
+	return parse_and_write_i2c_u8(buf, count, REG_BK2);
+}
+struct kobj_attribute lcd_backlight_attr
+	= __ATTR(lcd_backlight, 0660, lcd_backlight_show, lcd_backlight_store);
+
 // USB mouse get
 static ssize_t usb_mouse_show(struct kobject *kobj, struct kobj_attribute *attr,
 	char *buf)
@@ -482,6 +509,7 @@ static struct attribute *beepy_attrs[] = {
 	&led_green_attr.attr,
 	&led_blue_attr.attr,
 	&keyboard_backlight_attr.attr,
+	&lcd_backlight_attr.attr,
 	&usb_mouse_attr.attr,
 	&usb_keyboard_attr.attr,
 	&rewake_timer_attr.attr,

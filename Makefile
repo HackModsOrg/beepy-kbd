@@ -20,6 +20,7 @@ ifeq ($(BUILD_DIR),)
 BUILD_DIR := .
 endif
 
+BOOT_CONFIG_LINE_DETECT := dtoverlay=beepy-kbd,irq_pin=
 BOOT_CONFIG_LINE := dtoverlay=beepy-kbd,irq_pin=4
 KMAP_LINE := KMAP=/usr/share/kbd/keymaps/beepy-kbd.map
 
@@ -51,7 +52,7 @@ install_aux: beepy-kbd.dtbo
 	# Install device tree overlay
 	install -D -m 0644 $(BUILD_DIR)/beepy-kbd.dtbo /boot/overlays/
 	# Add configuration line if it wasn't already there
-	@grep -qxF '$(BOOT_CONFIG_LINE)' $(CONFIG) \
+	@grep -qxF '$(BOOT_CONFIG_LINE_DETECT)' $(CONFIG) \
 		|| printf '[all]\ndtparam=i2c_arm=on\n$(BOOT_CONFIG_LINE)\n' >> $(CONFIG)
 	# Add auto-load module line if it wasn't already there
 	@grep -qxF 'beepy-kbd' /etc/modules \

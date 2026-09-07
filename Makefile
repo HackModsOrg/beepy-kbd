@@ -21,7 +21,7 @@ BUILD_DIR := .
 endif
 
 BOOT_CONFIG_LINE_DETECT := ^dtoverlay=beepy-kbd,irq_pin=
-BOOT_CONFIG_LINE := dtoverlay=beepy-kbd,irq_pin=4
+BOOT_CONFIG_LINE := dtoverlay=beepy-kbd,irq_pin=5
 KMAP_LINE := KMAP=/usr/share/kbd/keymaps/beepy-kbd.map
 
 # Raspbian 12 moved config and cmdline to firmware

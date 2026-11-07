@@ -219,6 +219,87 @@ static ssize_t __used lcd_backlight_store(struct kobject *kobj,
 struct kobj_attribute lcd_backlight_attr
 	= __ATTR(lcd_backlight, 0660, lcd_backlight_show, lcd_backlight_store);
 
+// Keyboard freq get
+static ssize_t keyboard_freq_show(struct kobject *kobj, struct kobj_attribute *attr,
+	char *buf)
+{
+	int rc;
+	uint8_t state;
+
+	// Make sure I2C client was initialized
+	if ((g_ctx == NULL) || (g_ctx->i2c_client == NULL)) {
+		return -EINVAL;
+	}
+
+	// Read FRQ register value
+	if ((rc = kbd_read_i2c_u8(g_ctx->i2c_client, REG_FRQ, &state)) < 0) {
+		return rc;
+	}
+	return sprintf(buf, "%d\n", state);
+}
+// Keyboard freq set
+static ssize_t __used keyboard_freq_store(struct kobject *kobj,
+	struct kobj_attribute *attr, char const *buf, size_t count)
+{
+	return parse_and_write_i2c_u8(buf, count, REG_FRQ);
+}
+struct kobj_attribute keyboard_freq_attr
+	= __ATTR(keyboard_freq, 0660, keyboard_freq_show, keyboard_freq_store);
+
+// GPIO direction get
+static ssize_t gpio_dir_show(struct kobject *kobj, struct kobj_attribute *attr,
+	char *buf)
+{
+	int rc;
+	uint8_t state;
+
+	// Make sure I2C client was initialized
+	if ((g_ctx == NULL) || (g_ctx->i2c_client == NULL)) {
+		return -EINVAL;
+	}
+
+	// Read FRQ register value
+	if ((rc = kbd_read_i2c_u8(g_ctx->i2c_client, REG_DIR, &state)) < 0) {
+		return rc;
+	}
+	return sprintf(buf, "%d\n", state);
+}
+// GPIO direction set
+static ssize_t __used gpio_dir_store(struct kobject *kobj,
+	struct kobj_attribute *attr, char const *buf, size_t count)
+{
+	return parse_and_write_i2c_u8(buf, count, REG_DIR);
+}
+struct kobj_attribute gpio_dir_attr
+	= __ATTR(gpio_dir, 0660, gpio_dir_show, gpio_dir_store);
+
+// GPIO value get
+static ssize_t gpio_value_show(struct kobject *kobj, struct kobj_attribute *attr,
+	char *buf)
+{
+	int rc;
+	uint8_t state;
+
+	// Make sure I2C client was initialized
+	if ((g_ctx == NULL) || (g_ctx->i2c_client == NULL)) {
+		return -EINVAL;
+	}
+
+	// Read FRQ register value
+	if ((rc = kbd_read_i2c_u8(g_ctx->i2c_client, REG_GIO, &state)) < 0) {
+		return rc;
+	}
+	return sprintf(buf, "%d\n", state);
+}
+// GPIO value set
+static ssize_t __used gpio_value_store(struct kobject *kobj,
+	struct kobj_attribute *attr, char const *buf, size_t count)
+{
+	return parse_and_write_i2c_u8(buf, count, REG_GIO);
+}
+struct kobj_attribute gpio_value_attr
+	= __ATTR(gpio_value, 0660, gpio_value_show, gpio_value_store);
+
 // USB mouse get
 static ssize_t usb_mouse_show(struct kobject *kobj, struct kobj_attribute *attr,
 	char *buf)
@@ -510,6 +591,9 @@ static struct attribute *beepy_attrs[] = {
 	&led_blue_attr.attr,
 	&keyboard_backlight_attr.attr,
 	&lcd_backlight_attr.attr,
+	&keyboard_freq_attr.attr,
+	&gpio_dir_attr.attr,
+	&gpio_value_attr.attr,
 	&usb_mouse_attr.attr,
 	&usb_keyboard_attr.attr,
 	&rewake_timer_attr.attr,

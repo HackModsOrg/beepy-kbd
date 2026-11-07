@@ -155,6 +155,7 @@
 #define REG_MUX         0x51
 #define REG_MUX_USB 		BIT(0)
 #define REG_MUX_FUSB 		BIT(1)
+#define REG_MUX_UART 		BIT(2)
 #define REG_PWR          0x52
 #define REG_PWR_CHG_PWR			BIT(1)
 #define REG_PWR_CHG_DIS 		BIT(0)

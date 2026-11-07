@@ -327,7 +327,6 @@ static ssize_t __used gpio_value_store(struct kobject *kobj,
 }
 struct kobj_attribute gpio_value_attr
 	= __ATTR(gpio_value, 0660, gpio_value_show, gpio_value_store);
->>>>>>> a4c4617 (sysfs_iface: adding keyboard_freq, gpio_dir, gpio_value to the interface)
 
 // USB mouse get
 static ssize_t usb_mouse_show(struct kobject *kobj, struct kobj_attribute *attr,
@@ -638,7 +637,7 @@ static ssize_t mux_fusb_show(struct kobject *kobj, struct kobj_attribute *attr,
     state = state >> 1;
 	return sprintf(buf, "%d\n", state);
 }
-// USB mux set
+// FUSB mux set
 static ssize_t __used mux_fusb_store(struct kobject *kobj,
 	struct kobj_attribute *attr, char const *buf, size_t count)
 {
@@ -675,6 +674,63 @@ static ssize_t __used mux_fusb_store(struct kobject *kobj,
 }
 struct kobj_attribute mux_fusb_attr
 	= __ATTR(mux_fusb, 0660, mux_fusb_show, mux_fusb_store);
+
+// UART mux get
+static ssize_t mux_uart_show(struct kobject *kobj, struct kobj_attribute *attr,
+	char *buf)
+{
+	int rc;
+	uint8_t state;
+
+	// Make sure I2C client was initialized
+	if ((g_ctx == NULL) || (g_ctx->i2c_client == NULL)) {
+		return -EINVAL;
+	}
+
+	// Read PWR register value
+	if ((rc = kbd_read_i2c_u8(g_ctx->i2c_client, REG_MUX, &state)) < 0) {
+		return rc;
+	}
+    state &= REG_MUX_UART;
+	return sprintf(buf, "%d\n", state);
+}
+// UART mux set
+static ssize_t __used mux_uart_store(struct kobject *kobj,
+	struct kobj_attribute *attr, char const *buf, size_t count)
+{
+	int rc;
+	uint8_t reg_value;
+	uint8_t user_input;
+
+	// Parse string entry
+	if ((user_input = parse_u8(buf)) < 0) {
+		return -EINVAL;
+	}
+    if (user_input > 1) { // only 0 and 1 accepted
+		return -EINVAL;
+	}
+	// Make sure I2C client was initialized
+	if ((g_ctx == NULL) || (g_ctx->i2c_client == NULL)) {
+		return -EINVAL;
+	}
+
+	// Read MUX register value
+	if ((rc = kbd_read_i2c_u8(g_ctx->i2c_client, REG_MUX, &reg_value)) < 0) {
+		return rc;
+	}
+    //reg_value = reg_value & REG_MUX_UART;
+    if (user_input) {
+        reg_value |= REG_MUX_UART;
+    } else {
+        reg_value &= ~REG_MUX_UART;
+    }
+    if (g_ctx && g_ctx->i2c_client) {
+        kbd_write_i2c_u8(g_ctx->i2c_client, REG_MUX, (uint8_t)reg_value);
+    }
+    return count;
+}
+struct kobj_attribute mux_uart_attr
+	= __ATTR(mux_uart, 0660, mux_uart_show, mux_uart_store);
 
 // Shutdown and rewake timer in minutes
 static ssize_t __used rewake_timer_store(struct kobject *kobj,
@@ -859,6 +915,7 @@ static struct attribute *beepy_attrs[] = {
 	&charger_power_attr.attr,
 	&mux_usb_attr.attr,
 	&mux_fusb_attr.attr,
+	&mux_uart_attr.attr,
 	&usb_mouse_attr.attr,
 	&usb_keyboard_attr.attr,
 	&rewake_timer_attr.attr,

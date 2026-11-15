@@ -193,7 +193,7 @@ struct kobj_attribute keyboard_backlight_attr
 	= __ATTR(keyboard_backlight, 0660, keyboard_backlight_show, keyboard_backlight_store);
 
 // LCD backlight get
-static ssize_t lcd_backlight_show(struct kobject *kobj, struct kobj_attribute *attr,
+static ssize_t display_backlight_show(struct kobject *kobj, struct kobj_attribute *attr,
 	char *buf)
 {
 	int rc;
@@ -212,13 +212,13 @@ static ssize_t lcd_backlight_show(struct kobject *kobj, struct kobj_attribute *a
 }
 
 // LCD backlight set
-static ssize_t __used lcd_backlight_store(struct kobject *kobj,
+static ssize_t __used display_backlight_store(struct kobject *kobj,
 	struct kobj_attribute *attr, char const *buf, size_t count)
 {
 	return parse_and_write_i2c_u8(buf, count, REG_BK2);
 }
-struct kobj_attribute lcd_backlight_attr
-	= __ATTR(lcd_backlight, 0660, lcd_backlight_show, lcd_backlight_store);
+struct kobj_attribute display_backlight_attr
+	= __ATTR(display_backlight, 0660, display_backlight_show, display_backlight_store);
 
 // Keyboard freq get
 static ssize_t keyboard_freq_show(struct kobject *kobj, struct kobj_attribute *attr,
@@ -906,7 +906,7 @@ static struct attribute *beepy_attrs[] = {
 	&led_green_attr.attr,
 	&led_blue_attr.attr,
 	&keyboard_backlight_attr.attr,
-	&lcd_backlight_attr.attr,
+	&display_backlight_attr.attr,
 	&keyboard_freq_attr.attr,
 	&gpio_dir_attr.attr,
 	&gpio_value_attr.attr,
